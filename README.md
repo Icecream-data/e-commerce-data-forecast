@@ -1,11 +1,11 @@
-# 🛒 AI-Driven E-Commerce Demand Forecasting Dashboard
+# AI-Driven E-Commerce Demand Forecasting Dashboard
 ### AI活用によるECサイトの「物流・経営・在庫」最適化支援ダッシュボード
 
-## 📖 プロジェクト概要
+## プロジェクト概要
 実際のECサイトのトランザクションデータを用いて、機械学習による需要予測モデルを構築。
 単なる数値予測にとどまらず、**「経営層」「物流担当」「在庫担当」** という異なるステークホルダーの意思決定を支援するためのインタラクティブなダッシュボードアプリを開発しました。
 
-**👉 [デモアプリを開く]（https://e-commerce-data-forecast-hhcflxc737vqrreum5y8em.streamlit.app/）** 
+**[デモアプリを開く]（https://e-commerce-data-forecast-hhcflxc737vqrreum5y8em.streamlit.app/）** 
 
 ## 📊 データセット
 * **出典:** Kaggle - [E-Commerce Data](https://www.kaggle.com/datasets/carrie1/ecommerce-data)
@@ -14,7 +14,7 @@
 * **データ規模:** 約54万レコード
 * **使用カラム:** InvoiceNo, StockCode, Quantity, InvoiceDate, UnitPrice, Country ,Description, CustomerID
 
-## 🎯 解決するビジネス課題 (3つのシナリオ)
+## 解決するビジネス課題 (3つのシナリオ)
 
 本アプリケーションは、以下の3つの業務課題を解決するために設計されています。
 
