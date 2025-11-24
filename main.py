@@ -106,6 +106,7 @@ elif target_scenario == "Inventory: SKU Quantity":
     full_range = pd.date_range(start=model_df['Date'].min(), end=model_df['Date'].max(), freq='D')
     model_df = model_df.set_index('Date').reindex(full_range, fill_value=0).reset_index().rename(columns={'index': 'Date'})
 
+
 # -------------------------------------------
 # 5. データ分割 & 前処理 (モード別)
 # -------------------------------------------
@@ -127,20 +128,46 @@ if not model_df.empty:
     else:
         train_data = model_df # 全量を学習
         
+        # 予測期間をユーザーが設定可能に
+        st.markdown("### 予測設定")
+        future_steps = st.slider(
+            "予測期間（日数）",
+            min_value=7,
+            max_value=365,
+            value=30,
+            step=1
+        )
+        
         # 回帰モデルの場合は、未来の特徴量(CSV)が必要
         if model_category == "Regression Model":
-            st.markdown("### Upload Future Features CSV")
-            uploaded_file = st.file_uploader("Upload CSV", type="csv")
+            st.markdown("### ステップ1: 未来の特徴量データをアップロード")
+            st.info("""
+            **必須カラム**: `Date`, `Lag_1`, `Lag_7`, `DayOfWeek`
+            
+            **サンプルフォーマット**:
+            | Date       | Lag_1 | Lag_7 | DayOfWeek |
+            |------------|-------|-------|-----------|
+            | 2025-12-01 | 1500  | 1400  | 0         |
+            | 2025-12-02 | 1520  | 1420  | 1         |
+            
+            - `Lag_1`: 1日前の売上/注文数
+            - `Lag_7`: 7日前の売上/注文数
+            - `DayOfWeek`: 曜日（0=月曜 ～ 6=日曜）
+            """, icon="📋")
+            
+            uploaded_file = st.file_uploader("CSV をアップロード", type="csv", key="future_csv")
             if uploaded_file:
                 uploaded_future_df = pd.read_csv(uploaded_file)
-                # 特徴量Lag作成のために結合などの処理が必要だが、簡易的にそのまま使用と仮定
+                st.success(f"{len(uploaded_future_df)} 件のデータをアップロードしました")
+                st.dataframe(uploaded_future_df.head(), use_container_width=True)
             else:
-                st.info("Please upload CSV to predict future with Random Forest.")
+                st.error("エラー：Random Forest の未来予測には CSV ファイルが必須です")
                 st.stop()
         
-        # 時系列モデルは自動で未来の日付を生成するのでCSV不要
+        # 時系列モデルは自動で未来の日付を生成
         else:
-            pass 
+            st.markdown(f"### 向こう {future_steps} 日間を自動予測します")
+            st.success(f"{selected_model} モデルで未来予測を実行中...")
 
 # -------------------------------------------
 # 6. モデル学習 & 予測実行
