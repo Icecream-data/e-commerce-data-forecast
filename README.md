@@ -5,7 +5,9 @@
 実際のECサイトのトランザクションデータを用いて、機械学習および統計的手法による需要予測モデルを構築。
 **「経営層」「物流担当」「在庫担当」** という異なるステークホルダーが必要とする数値を可視化する、インタラクティブなダッシュボードアプリです。
 
-** [デモアプリを開く](https://e-commerce-data-forecast-hhcflxc737vqrreum5y8em.streamlit.app/%EF%BC%89)** ## データセット
+**[デモアプリを開く](https://e-commerce-data-forecast-hhcflxc737vqrreum5y8em.streamlit.app/%EF%BC%89)** 
+
+## データセット
 * **出典:** Kaggle - [E-Commerce Data](https://www.kaggle.com/datasets/carrie1/ecommerce-data)
 * **内容:** イギリスを拠点とするオンラインギフトショップの全取引データ（主な顧客はグローバルな卸売業者）
 * **期間:** 2010/12/01 〜 2011/12/09 (約1年間)
