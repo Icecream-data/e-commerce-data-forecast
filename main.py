@@ -369,3 +369,48 @@ with st.expander(":material/table_view: 詳細データを確認する"):
         result_df["Diff"] = result_df["Forecast"] - result_df["Actual"]
     
     st.dataframe(result_df, use_container_width=True)
+
+# -------------------------------------------
+# 10. 採用モデルの技術解説 (Model Logic)
+# -------------------------------------------
+st.markdown("---")
+with st.expander(":material/psychology: 採用アルゴリズムの技術的特徴 (Model Characteristics)", expanded=False):
+    st.markdown(f"現在選択されている **{selected_model}** モデルのアルゴリズム概要と特性です。")
+
+    # --- Random Forest ---
+    if selected_model == "Random Forest":
+        st.markdown("""
+        #### :material/forest: Random Forest (ランダムフォレスト)
+        * **分類**: 機械学習 / アンサンブル学習 (Bagging)
+        * **仕組み**: 多数の「決定木」を構築し、各木の予測結果を平均して最終的な数値を算出します。
+        * **特徴**:
+            * データに含まれる**非線形な関係性**（単純な直線ではない複雑なパターン）を捉える能力が高いです。
+            * 「曜日」「7日前の売上」といった特徴量の相互作用を学習します。
+            * 外れ値やノイズに対して比較的頑健で、過学習しにくい特性があります。
+        """)
+
+    # --- Prophet ---
+    elif selected_model == "Prophet":
+        st.markdown("""
+        #### :material/timeline: Prophet (プロフェット)
+        * **分類**: 時系列解析 / 一般化加法モデル (GAM)
+        * **仕組み**: Meta社（旧Facebook）によって開発されたモデル。「トレンド」「季節性」「休日効果」の3つを足し合わせることで予測します。
+        * **特徴**:
+            * **人間が解釈しやすい**構成要素（週周期、年周期など）でモデル化されます。
+            * 欠損値（データの抜け）があっても補完せずにそのまま学習可能です。
+            * トレンドの変化点（Change Points）を自動的に検知し、急激な需要変動に追従します。
+        """)
+
+    # --- ARIMA ---
+    elif selected_model == "ARIMA":
+        st.markdown("""
+        #### :material/functions: ARIMA (自己回帰和分移動平均モデル)
+        * **分類**: 統計的時系列モデル
+        * **仕組み**: 以下の3つの要素を組み合わせて数式化します。
+            1. **AR (AutoRegressive)**: 直近の過去データとの相関（自己相関）
+            2. **I (Integrated)**: データの差分（トレンドの除去）
+            3. **MA (Moving Average)**: 過去の予測誤差の影響
+        * **特徴**:
+            * データそのものが持つ「短期的な相関関係」を数理的にモデル化するため、**直近のトレンド延長**において高い精度を発揮しやすいです。
+            * 季節変動が複雑な場合よりも、短期的な動きの慣性を捉えるのに適しています。
+        """)
