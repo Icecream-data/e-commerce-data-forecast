@@ -4,8 +4,6 @@ import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_percentage_error
 import numpy as np
-
-# 追加ライブラリのインポート
 from prophet import Prophet
 from statsmodels.tsa.arima.model import ARIMA
 
@@ -19,7 +17,7 @@ st.set_page_config(
 )
 
 st.title("Demand Forecasting Dashboard")
-st.markdown("Dashboard for visualizing sales trends and forecasting future demand.")
+st.markdown("売上の可視化と予測を行うダッシュボードアプリケーションです")
 
 # -------------------------------------------
 # 2. データ読み込み
@@ -234,57 +232,140 @@ if not train_data.empty:
                 dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=future_steps)
 
 # -------------------------------------------
-# 7. 可視化 (共通化)
+# 7. 結果の可視化 (Visualization)
 # -------------------------------------------
 st.markdown("---")
-st.subheader("Forecast Results")
+st.subheader(":material/monitoring: 予測結果モニタリング")
 
 fig = go.Figure()
 
-# 実測値 (Backtestの場合のみ表示)
+# --- A. 実測値 (Backtestの場合のみ表示) ---
 if y_true is not None:
     fig.add_trace(go.Scatter(
-        x=dates, y=y_true, mode='lines', name='Actual',
+        x=dates, y=y_true, mode='lines', name='実績値 (Actual)',
         line=dict(color='gray', width=1.5), opacity=0.6
     ))
 
-# 予測値
-fig.add_trace(go.Scatter(
-    x=dates, y=preds, mode='lines', name=f'Forecast ({selected_model})',
-    line=dict(color='#1E88E5', width=3) # Material Blue
-))
+# --- B. シナリオ別の可視化設定 ---
 
-# レイアウト
+# 経営層向け: 目標ラインの表示
+if target_scenario == "Management: Sales" or target_scenario == "経営層：売上予測":
+    # 予測値
+    fig.add_trace(go.Scatter(
+        x=dates, y=preds, mode='lines', name=f'AI予測 ({selected_model})',
+        line=dict(color='#1E88E5', width=3)
+    ))
+
+    # 目標ライン（事実として表示）
+    if y_true is not None:
+        target_val = y_true.mean() * 1.05
+    else:
+        target_val = preds.mean() * 1.05
+        
+    fig.add_hline(
+        y=target_val, 
+        line_color="#D32F2F", line_width=2, line_dash="solid", # Material Red
+        annotation_text=f"予算目標: {target_val:,.0f} {unit_label}", 
+        annotation_position="top left"
+    )
+
+# 現場（物流・在庫）向け: 変動幅（バンド）の表示
+else:
+    # 変動リスク幅 (±20%と仮定)
+    upper_band = preds * 1.2
+    lower_band = preds * 0.8
+    
+    # バンド描画
+    fig.add_trace(go.Scatter(
+        x=dates, y=lower_band, mode='lines', line=dict(width=0),
+        showlegend=False, hoverinfo='skip'
+    ))
+    fig.add_trace(go.Scatter(
+        x=dates, y=upper_band, mode='lines', line=dict(width=0),
+        fill='tonexty',
+        fillcolor='rgba(25, 118, 210, 0.1)', # Material Blue tint
+        name='変動予測幅 (±20%)'
+    ))
+    
+    # 中心予測値
+    fig.add_trace(go.Scatter(
+        x=dates, y=preds, mode='lines', name=f'AI予測 (中心値)',
+        line=dict(color='#1E88E5', width=3)
+    ))
+
+# レイアウト設定
+if app_mode == "Backtest Validation":
+    chart_title = f"検証結果: {selected_model} vs 実績"
+else:
+    chart_title = f"未来予測: {selected_model} による向こう30日間の推移"
+
 fig.update_layout(
-    title=f"{selected_model} Prediction vs Actual",
-    xaxis_title="Date",
+    title=chart_title,
+    xaxis_title="日付",
     yaxis_title=unit_label,
     hovermode="x unified",
-    template="plotly_white"
+    template="plotly_white",
+    margin=dict(l=20, r=20, t=50, b=20)
 )
 st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------------------
-# 8. 評価指標 (Backtestのみ)
+# 8. 主要KPI (Key Performance Indicators)
 # -------------------------------------------
-if app_mode == "Backtest Validation" and y_true is not None:
-    # ゼロ除算回避のための安全なMAPE計算
-    mask = y_true != 0
-    if mask.sum() > 0:
-        mape_val = mean_absolute_percentage_error(y_true[mask], preds[mask]) * 100
-        accuracy = max(0, 100 - mape_val)
-    else:
-        accuracy = 0
-        mape_val = 0
+st.subheader(":material/analytics: 主要指標 (Key Metrics)")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Model Accuracy", f"{accuracy:.1f}%")
-    with col2:
-        st.metric("MAPE (Error Rate)", f"{mape_val:.1f}%")
+# カラム作成（事実データのみを表示）
+col1, col2, col3 = st.columns(3)
+
+# 共通指標: 期間平均値
+avg_pred = preds.mean()
+total_pred = preds.sum()
+
+with col1:
+    st.metric(
+        label=f"期間平均 ({unit_label})", 
+        value=f"{avg_pred:,.1f}"
+    )
+
+with col2:
+    st.metric(
+        label=f"期間合計 ({unit_label})", 
+        value=f"{total_pred:,.1f}"
+    )
+
+# 精度指標 (Backtestモードのみ表示)
+with col3:
+    if app_mode == "Backtest Validation" and y_true is not None:
+        mask = y_true != 0
+        if mask.sum() > 0:
+            mape_val = np.mean(np.abs((y_true[mask] - preds[mask]) / y_true[mask])) * 100
+            accuracy = max(0, 100 - mape_val)
+        else:
+            accuracy = 0
+            mape_val = 0
+            
+        st.metric(
+            label="モデル予測精度 (Accuracy)", 
+            value=f"{accuracy:.1f}%",
+            delta=f"誤差率(MAPE): {mape_val:.1f}%",
+            delta_color="inverse" # 誤差が小さいほど良い色にする
+        )
+    else:
+        # 未来予測モードの場合は、予測の信頼度に関する参考情報を表示
+        st.info("※ 未来予測モードのため、正解データとの比較（精度算出）は行われません。", icon=":material/info:")
+
+# -------------------------------------------
+# 9. 詳細データテーブル (Data Grid)
+# -------------------------------------------
+with st.expander(":material/table_view: 詳細データを確認する"):
+    # 結果をデータフレームにまとめる
+    result_df = pd.DataFrame({
+        "Date": dates,
+        "Forecast": preds
+    })
     
-    # モデルごとの特徴解説
-    st.info(f"Note: {selected_model} was used. " + 
-            ("Random Forest captures complex patterns but needs lag features." if selected_model == "Random Forest" else 
-             "Prophet works well with seasonality and holidays." if selected_model == "Prophet" else 
-             "ARIMA is strong for short-term trends based on autocorrelation."))
+    if y_true is not None:
+        result_df["Actual"] = y_true.values
+        result_df["Diff"] = result_df["Forecast"] - result_df["Actual"]
+    
+    st.dataframe(result_df, use_container_width=True)
