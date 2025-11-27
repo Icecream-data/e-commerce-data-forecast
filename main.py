@@ -323,9 +323,9 @@ else:
 
 # レイアウト設定
 if app_mode == "精度検証":
-    chart_title = f"検証結果: {selected_model}予測 vs 実績"
+    chart_title = f"検証結果: 予測 vs 実績"
 else:
-    chart_title = f"未来予測: {selected_model}予測 による向こう30日間の推移"
+    chart_title = f"未来予測: {selected_model}予測による向こう30日間の推移"
 
 fig.update_layout(
     title=chart_title,
