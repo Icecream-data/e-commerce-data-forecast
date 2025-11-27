@@ -11,12 +11,12 @@ from statsmodels.tsa.arima.model import ARIMA
 # 1. ページ設定
 # -------------------------------------------
 st.set_page_config(
-    page_title="Demand Forecasting Dashboard",
+    page_title="需要予測ダッシュボード",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-st.title("Demand Forecasting Dashboard")
+st.title("需要予測ダッシュボード")
 st.markdown("売上の可視化と予測を行うダッシュボードアプリケーションです")
 
 # -------------------------------------------
@@ -44,34 +44,34 @@ df_rich, df_sku = load_data()
 # -------------------------------------------
 # 3. サイドバー設定 (階層構造に変更)
 # -------------------------------------------
-st.sidebar.header("Settings")
+st.sidebar.header("設定メニュー")
 
 # 3-1. モード選択
 app_mode = st.sidebar.selectbox(
-    "Mode",
-    ["Backtest Validation", "Future Prediction"]
+    "モード選択",
+    ["バックテスト精度検証", "未来予測"]
 )
 
 # 3-2. シナリオ選択
 target_scenario = st.sidebar.radio(
-    "Target Scenario",
-    ("Management: Sales", "Logistics: Orders", "Inventory: SKU Quantity")
+    "ターゲットシナリオを選択してください",
+    ("経営者向け: 売上予測", "物流担当 : 注文数予測", "在庫担当: SKU別需要予測")
 )
 
 # 3-3. モデル選択 (回帰 vs 時系列)
 st.sidebar.markdown("---")
-st.sidebar.subheader("Model Configuration")
+st.sidebar.subheader("モデル選択")
 
 model_category = st.sidebar.selectbox(
-    "Model Category",
-    ["Regression Model", "Time Series Model"]
+    "モデルカテゴリ",
+    ["回帰モデル", "時系列モデル"]
 )
 
 selected_model = ""
-if model_category == "Regression Model":
-    selected_model = st.sidebar.selectbox("Algorithm", ["Random Forest"])
+if model_category == "回帰モデル":
+    selected_model = st.sidebar.selectbox("アルゴリズム", ["Random Forest"])
 else:
-    selected_model = st.sidebar.selectbox("Algorithm", ["Prophet", "ARIMA"])
+    selected_model = st.sidebar.selectbox("アルゴリズム", ["Prophet", "ARIMA"])
 
 # -------------------------------------------
 # 4. データ準備 (シナリオ別)
@@ -139,7 +139,7 @@ if not model_df.empty:
         )
         
         # 回帰モデルの場合は、未来の特徴量(CSV)が必要
-        if model_category == "Regression Model":
+        if model_category == "回帰モデル":
             st.markdown("### ステップ1: 未来の特徴量データをアップロード")
             st.info("""
             **必須カラム**: `Date`, `Lag_1`, `Lag_7`, `DayOfWeek`
