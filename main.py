@@ -49,13 +49,13 @@ st.sidebar.header("設定メニュー")
 # 3-1. モード選択
 app_mode = st.sidebar.selectbox(
     "モード選択",
-    ["バックテスト精度検証", "未来予測"]
+    ["精度検証", "未来予測"]
 )
 
 # 3-2. シナリオ選択
 target_scenario = st.sidebar.radio(
-    "ターゲットシナリオを選択してください",
-    ("経営者向け: 売上予測", "物流担当 : 注文数予測", "在庫担当: SKU別需要予測")
+    "シナリオを選択",
+    ("経営者向け: 売上予測", "物流担当: 注文数予測", "在庫担当: SKU別需要予測")
 )
 
 # 3-3. モデル選択 (回帰 vs 時系列)
@@ -80,17 +80,17 @@ target_col = ""
 model_df = pd.DataFrame()
 unit_label = ""
 
-if target_scenario == "Management: Sales":
+if target_scenario == "経営者向け: 売上予測":
     target_col = 'Sales'
     unit_label = "UKポンド"
     model_df = df_rich.copy()
 
-elif target_scenario == "Logistics: Orders":
+elif target_scenario == "物流担当: 注文数予測":
     target_col = 'OrderCount'
     unit_label = "Orders"
     model_df = df_rich.copy()
 
-elif target_scenario == "Inventory: SKU Quantity":
+elif target_scenario == "在庫担当: SKU別需要予測":
     if df_sku.empty:
         st.error("Error: SKU data not found.")
         st.stop()
@@ -120,7 +120,7 @@ uploaded_future_df = pd.DataFrame()
 if not model_df.empty:
     
     # --- A. Backtest Mode (過去データで検証) ---
-    if app_mode == "Backtest Validation":
+    if app_mode == "精度検証":
         train_data = model_df.iloc[:-future_steps]
         test_data = model_df.iloc[-future_steps:]
     
@@ -193,7 +193,7 @@ if not train_data.empty:
             features = ['Lag_1', 'Lag_7', 'DayOfWeek']
             
             # データの切り出し直し（dropna後）
-            if app_mode == "Backtest Validation":
+            if app_mode == "精度検証":
                 X_train = df_rf.iloc[:-future_steps][features]
                 y_train = df_rf.iloc[:-future_steps][target_col]
                 X_test = df_rf.iloc[-future_steps:][features]
@@ -220,7 +220,7 @@ if not train_data.empty:
             m = Prophet()
             m.fit(df_prophet)
             
-            if app_mode == "Backtest Validation":
+            if app_mode == "精度検証":
                 # テスト期間の日付フレームを作成
                 future = m.make_future_dataframe(periods=future_steps)
                 forecast = m.predict(future)
@@ -250,7 +250,7 @@ if not train_data.empty:
             forecast_result = arima_result.forecast(steps=future_steps)
             preds = forecast_result.values
             
-            if app_mode == "Backtest Validation":
+            if app_mode == "精度検証":
                 y_true = test_data[target_col]
                 dates = test_data['Date']
             else:
@@ -276,7 +276,7 @@ if y_true is not None:
 # --- B. シナリオ別の可視化設定 ---
 
 # 経営層向け: 目標ラインの表示
-if target_scenario == "Management: Sales" or target_scenario == "経営層：売上予測":
+if target_scenario == "経営者向け: 売上予測":
     # 予測値
     fig.add_trace(go.Scatter(
         x=dates, y=preds, mode='lines', name=f'AI予測 ({selected_model})',
@@ -298,6 +298,7 @@ if target_scenario == "Management: Sales" or target_scenario == "経営層：売
 
 # 現場（物流・在庫）向け: 変動幅（バンド）の表示
 else:
+    
     # 変動リスク幅 (±20%と仮定)
     upper_band = preds * 1.2
     lower_band = preds * 0.8
@@ -321,10 +322,10 @@ else:
     ))
 
 # レイアウト設定
-if app_mode == "Backtest Validation":
-    chart_title = f"検証結果: {selected_model} vs 実績"
+if app_mode == "精度検証":
+    chart_title = f"検証結果: {selected_model}予測 vs 実績"
 else:
-    chart_title = f"未来予測: {selected_model} による向こう30日間の推移"
+    chart_title = f"未来予測: {selected_model}予測 による向こう30日間の推移"
 
 fig.update_layout(
     title=chart_title,
@@ -362,7 +363,7 @@ with col2:
 
 # 精度指標 (Backtestモードのみ表示)
 with col3:
-    if app_mode == "Backtest Validation" and y_true is not None:
+    if app_mode == "精度検証" and y_true is not None:
         mask = y_true != 0
         if mask.sum() > 0:
             mape_val = np.mean(np.abs((y_true[mask] - preds[mask]) / y_true[mask])) * 100
