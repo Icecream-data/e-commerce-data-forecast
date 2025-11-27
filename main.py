@@ -292,7 +292,7 @@ if target_scenario == "経営者向け: 売上予測":
     fig.add_hline(
         y=target_val, 
         line_color="#D32F2F", line_width=2, line_dash="solid", # Material Red
-        annotation_text=f"予算目標: {target_val:,.0f} {unit_label}", 
+        annotation_text=f"予算目標: 実績平均よりも5%高い数値", 
         annotation_position="top left"
     )
 
