@@ -55,7 +55,7 @@ app_mode = st.sidebar.selectbox(
 # 3-2. シナリオ選択
 target_scenario = st.sidebar.radio(
     "シナリオを選択",
-    ("経営者向け: 売上予測", "物流担当: 注文数予測", "在庫担当: SKU別需要予測")
+    ("経営者向け: 売上予測", "物流担当: 注文数予測", "在庫担当: SKU需要予測")
 )
 
 # 3-3. モデル選択 (回帰 vs 時系列)
@@ -90,7 +90,7 @@ elif target_scenario == "物流担当: 注文数予測":
     unit_label = "Orders"
     model_df = df_rich.copy()
 
-elif target_scenario == "在庫担当: SKU別需要予測":
+elif target_scenario == "在庫担当: SKU需要予測":
     if df_sku.empty:
         st.error("Error: SKU data not found.")
         st.stop()
